@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Sổ Lớp — Quản lý lớp dạy thêm</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --ink:#1B2A22;
+  --paper:#EDF1EC;
+  --surface:#FFFFFF;
+  --chalk:#2B4735;
+  --chalk-light:#3E6350;
+  --coral:#E2583F;
+  --coral-bg:#FBEAE6;
+  --leaf:#6B9071;
+  --leaf-bg:#E9F1EA;
+  --gold:#D9A441;
+  --gold-bg:#FBF3E1;
+  --line:#DCE3DD;
+  --muted:#6B7A70;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Be Vietnam Pro',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+h1,h2,h3,.display{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-0.01em;}
+
+#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;padding-bottom:78px;}
+
+/* ---- Top bar ---- */
+.topbar{
+  background:var(--chalk);
+  color:#fff;
+  padding:18px 18px 22px;
+  border-radius:0 0 22px 22px;
+  position:relative;
+  overflow:hidden;
+}
+.topbar::after{
+  content:"";
+  position:absolute;right:-30px;top:-30px;width:130px;height:130px;
+  border-radius:50%;background:rgba(255,255,255,0.06);
+}
+.topbar .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;}
+.topbar h1{font-size:23px;margin:2px 0 0;color:#fff;}
+.topbar .sub{font-size:13px;opacity:.85;margin-top:4px;}
+.gear-btn{
+  position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.12);
+  border:none;color:#fff;width:34px;height:34px;border-radius:10px;
+  font-size:16px;cursor:pointer;
+}
+
+main{padding:16px;}
+
+/* ---- Cards ---- */
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:14px;
+}
+.card h3{font-size:15px;margin:0 0 10px;color:var(--chalk);}
+.stat-row{display:flex;gap:10px;}
+.stat{
+  flex:1;background:var(--paper);border-radius:12px;padding:12px;
+}
+.stat .label{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.stat .value{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:600;margin-top:4px;}
+.stat.debt .value{color:var(--coral);}
+.stat.rev .value{color:var(--chalk);}
+
+.empty{
+  text-align:center;color:var(--muted);font-size:13.5px;padding:22px 10px;
+}
+
+/* ---- lists ---- */
+.list-item{
+  display:flex;align-items:center;gap:12px;padding:12px 4px;
+  border-bottom:1px solid var(--line);
+}
+.list-item:last-child{border-bottom:none;}
+.avatar{
+  width:38px;height:38px;border-radius:50%;background:var(--chalk);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;flex-shrink:0;
+}
+.li-main{flex:1;min-width:0;}
+.li-title{font-weight:600;font-size:14.5px;}
+.li-sub{font-size:12.5px;color:var(--muted);margin-top:1px;}
+.badge{
+  font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;
+}
+.badge.debt{background:var(--coral-bg);color:var(--coral);}
+.badge.ok{background:var(--leaf-bg);color:var(--leaf);}
+.badge.warn{background:var(--gold-bg);color:#8a6415;}
+
+.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;-webkit-overflow-scrolling:touch;}
+.chip{
+  flex-shrink:0;padding:9px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;
+}
+.chip.active{background:var(--chalk);border-color:var(--chalk);color:#fff;}
+
+/* ---- buttons ---- */
+.btn{
+  border:none;border-radius:12px;padding:12px 16px;font-weight:600;font-size:14px;
+  cursor:pointer;font-family:inherit;
+}
+.btn-primary{background:var(--chalk);color:#fff;width:100%;}
+.btn-primary:active{background:var(--chalk-light);}
+.btn-ghost{background:var(--paper);color:var(--chalk);}
+.btn-coral{background:var(--coral);color:#fff;}
+.btn-block{width:100%;}
+.btn-sm{padding:7px 12px;font-size:12.5px;border-radius:9px;}
+.fab{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:88px;max-width:448px;width:calc(100% - 32px);
+  z-index:20;box-shadow:0 8px 20px rgba(43,71,53,0.28);
+}
+
+/* ---- form ---- */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px;}
+.field input,.field select,.field textarea{
+  width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+  font-family:inherit;font-size:14.5px;background:var(--surface);color:var(--ink);
+}
+.field textarea{resize:vertical;min-height:60px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* ---- attendance toggle ---- */
+.att-row{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line);}
+.att-row:last-child{border-bottom:none;}
+.toggle{
+  flex-shrink:0;width:56px;height:32px;border-radius:999px;border:2px solid var(--line);
+  background:var(--paper);position:relative;cursor:pointer;transition:background .15s,border-color .15s;
+}
+.toggle .knob{
+  position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s;display:flex;align-items:center;justify-content:center;
+  font-size:13px;
+}
+.toggle.present{background:var(--leaf);border-color:var(--leaf);}
+.toggle.present .knob{transform:translateX(24px);}
+.toggle.absent .knob::after{content:"✕";color:var(--coral);}
+.toggle.present .knob::after{content:"✓";color:var(--leaf);}
+
+/* ---- tabbar ---- */
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--line);display:flex;max-width:480px;margin:0 auto;
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:10;
+}
+.tab-btn{
+  flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 2px;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;
+}
+.tab-btn .ic{font-size:19px;}
+.tab-btn.active{color:var(--chalk);}
+
+/* ---- modal ---- */
+.overlay{
+  position:fixed;inset:0;background:rgba(27,42,34,0.45);z-index:50;
+  display:flex;align-items:flex-end;justify-content:center;
+}
+.sheet{
+  background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;
+  padding:20px;max-height:88vh;overflow-y:auto;
+}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.sheet-head h3{margin:0;font-size:17px;}
+.close-x{background:var(--paper);border:none;width:30px;height:30px;border-radius:9px;font-size:15px;cursor:pointer;color:var(--muted);}
+
+.section-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;}
+.check-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line);}
+.check-row input{width:18px;height:18px;}
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:10px 18px;border-radius:999px;font-size:13px;z-index:80;box-shadow:0 6px 16px rgba(0,0,0,.2);
+}
+a{color:var(--chalk);}
+.link-btn{background:none;border:none;color:var(--chalk);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;padding:0;}
+.row-between{display:flex;justify-content:space-between;align-items:center;}
+.small-muted{font-size:12px;color:var(--muted);}
+.fee-input{
+  width:78px;flex-shrink:0;padding:7px 8px;border-radius:9px;border:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;background:var(--surface);color:var(--ink);
+}
+.fee-input:disabled{background:var(--paper);color:var(--muted);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="root"></div>
+  <div id="tabbar-root"></div>
+</div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+/* ================= DATA LAYER ================= */
+const WEEKDAYS = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+const WEEKDAYS_SHORT = ['CN','T2','T3','T4','T5','T6','T7'];
+const STORAGE_KEY = 'sololop-data-v1';
+
+let state = null;
+let tab = 'dashboard';
+let attSel = { classId: null, date: todayStr() };
+let studentDetailId = null;
+let classDetailId = null;
+let studentFilter = '';
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtMoney(n){ return (n||0).toLocaleString('vi-VN') + 'đ'; }
+function fmtDate(s){ const [y,m,d]=s.split('-'); return d+'/'+m; }
+function initials(name){ const p=name.trim().split(/\s+/); return (p[p.length-1][0]||'').toUpperCase(); }
+
+function defaultState(){
+  return { classes:[], students:[], classStudents:[], sessions:[], attendance:[], payments:[], settings:{debtThreshold:3} };
+}
+
+async function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    state = raw ? JSON.parse(raw) : defaultState();
+  }catch(e){
+    state = defaultState();
+  }
+  if(!state.settings) state.settings = {debtThreshold:3};
+  render();
+}
+
+let saveTimer=null;
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ showToast('Lỗi lưu dữ liệu, thử lại sau'); }
+  }, 150);
+}
+
+function showToast(msg){
+  const r = document.getElementById('toast-root');
+  r.innerHTML = `<div class="toast">${msg}</div>`;
+  setTimeout(()=>{ r.innerHTML=''; }, 2200);
+}
+
+/* ================= DERIVED HELPERS ================= */
+function classById(id){ return state.classes.find(c=>c.id===id); }
+function studentById(id){ return state.students.find(s=>s.id===id); }
+function studentsInClass(classId){
+  const ids = state.classStudents.filter(cs=>cs.class_id===classId).map(cs=>cs.student_id);
+  return state.students.filter(s=>ids.includes(s.id));
+}
+function classesOfStudent(studentId){
+  const ids = state.classStudents.filter(cs=>cs.student_id===studentId).map(cs=>cs.class_id);
+  return state.classes.filter(c=>ids.includes(c.id));
+}
+function unpaidAttendanceOf(studentId){
+  return state.attendance
+    .filter(a=>a.student_id===studentId && a.status==='present' && a.payment_status!=='paid')
+    .sort((a,b)=> a.date < b.date ? -1 : 1);
+}
+function studentDebt(studentId){
+  const un = unpaidAttendanceOf(studentId);
+  const sessions = un.length;
+  const amount = un.reduce((sum,a)=> sum + (a.fee_amount - (a.paid_amount||0)), 0);
+  return {sessions, amount};
+}
+function totalDebt(){
+  return state.students.reduce((sum,s)=> sum + studentDebt(s.id).amount, 0);
+}
+function revenueBetween(fromStr,toStr){
+  return state.payments.filter(p=> p.paid_date>=fromStr && p.paid_date<=toStr).reduce((s,p)=>s+p.amount,0);
+}
+function startOfWeek(){
+  const d=new Date(); const day=d.getDay(); const diff = (day===0?6:day-1);
+  d.setDate(d.getDate()-diff);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function startOfMonth(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01';
+}
+function classesToday(){
+  const wd = new Date().getDay();
+  return state.classes.filter(c=>c.weekday===wd).sort((a,b)=> a.start_time.localeCompare(b.start_time));
+}
+
+/* ================= RENDER ROOT ================= */
+function render(){
+  const root = document.getElementById('root');
+  root.innerHTML = topbarHtml() + '<main>' + viewHtml() + '</main>' + fabHtml();
+  document.getElementById('tabbar-root').innerHTML = tabbarHtml();
+  bindGlobalEvents();
+}
+
+function topbarHtml(){
+  const titles = {dashboard:['Sổ Lớp','Tổng quan hôm nay'],attendance:['Điểm danh','Chọn lớp và ngày'],students:['Học sinh','Danh sách & công nợ'],classes:['Lớp học','Quản lý lớp học thêm']};
+  const [h,sub] = titles[tab];
+  const d = new Date();
+  const dateLabel = WEEKDAYS[d.getDay()] + ', ' + d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  return `<div class="topbar">
+    <button class="gear-btn" onclick="openSettings()">⚙</button>
+    <div class="eyebrow">${tab==='dashboard'?dateLabel:sub}</div>
+    <h1>${h}</h1>
+    ${tab==='dashboard' ? '' : `<div class="sub">${sub}</div>`}
+  </div>`;
+}
+
+function tabbarHtml(){
+  const items = [
+    ['dashboard','⌂','Tổng quan'],
+    ['attendance','✓','Điểm danh'],
+    ['students','☺','Học sinh'],
+    ['classes','▤','Lớp học'],
+  ];
+  return `<div class="tabbar">${items.map(([k,ic,label])=>`
+    <button class="tab-btn ${tab===k?'active':''}" onclick="switchTab('${k}')">
+      <span class="ic">${ic}</span><span>${label}</span>
+    </button>`).join('')}</div>`;
+}
+
+function switchTab(t){ tab=t; render(); window.scrollTo(0,0); }
+
+function fabHtml(){
+  if(tab==='students') return `<button class="btn btn-primary fab" onclick="openStudentForm()">+ Thêm học sinh</button>`;
+  if(tab==='classes' && !classDetailId) return `<button class="btn btn-primary fab" onclick="openClassForm()">+ Thêm lớp học</button>`;
+  return '';
+}
+
+function viewHtml(){
+  if(tab==='dashboard') return dashboardHtml();
+  if(tab==='attendance') return attendanceHtml();
+  if(tab==='students') return studentDetailId ? studentDetailHtml(studentDetailId) : studentsHtml();
+  if(tab==='classes') return classDetailId ? classDetailHtml(classDetailId) : classesHtml();
+  return '';
+}
+
+/* ================= DASHBOARD ================= */
+function dashboardHtml(){
+  const today = classesToday();
+  const debt = totalDebt();
+  const revWeek = revenueBetween(startOfWeek(), todayStr());
+  const topDebt = [...state.students].map(s=>({s,d:studentDebt(s.id)})).filter(x=>x.d.amount>0)
+    .sort((a,b)=>b.d.amount-a.d.amount).slice(0,3);
+
+  return `
+  <div class="stat-row" style="margin-bottom:14px;">
+    <div class="stat debt"><div class="label">Tổng công nợ</div><div class="value">${fmtMoney(debt)}</div></div>
+    <div class="stat rev"><div class="label">Thu tuần này</div><div class="value">${fmtMoney(revWeek)}</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Ca dạy hôm nay</h3>
+    ${ today.length===0 ? `<div class="empty">Hôm nay không có lịch dạy cố định.</div>` :
+      today.map(c=>`
+        <div class="list-item">
+          <div class="avatar">${initials(c.name)}</div>
+          <div class="li-main">
+            <div class="li-title">${c.name}</div>
+            <div class="li-sub">${c.start_time}–${c.end_time} · Khối ${c.grade} · ${studentsInClass(c.id).length} học sinh</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="goAttend('${c.id}')">Điểm danh</button>
+        </div>`).join('')
+    }
+  </div>
+
+  <div class="card">
+    <h3>Nợ học phí nhiều nhất</h3>
+    ${ topDebt.length===0 ? `<div class="empty">Chưa có học sinh nào nợ học phí 🎉</div>` :
+      topDebt.map(({s,d})=>`
+        <div class="list-item" onclick="openStudent('${s.id}')" style="cursor:pointer;">
+          <div class="avatar">${initials(s.full_name)}</div>
+          <div class="li-main">
+            <div class="li-title">${s.full_name}</div>
+            <div class="li-sub">Nợ ${d.sessions} buổi</div>
+          </div>
+          <div class="badge debt num">${fmtMoney(d.amount)}</div>
+        </div>`).join('')
+    }
+  </div>
+
+  <div class="card">
+    <h3>Thống kê nhanh</h3>
+    <div class="stat-row">
+      <div class="stat"><div class="label">Học sinh</div><div class="value">${state.students.filter(s=>s.status!=='nghỉ hẳn').length}</div></div>
+      <div class="stat"><div class="label">Lớp học</div><div class="value">${state.classes.length}</div></div>
+      <div class="stat"><div class="label">Thu tháng</div><div class="value" style="font-size:15px;">${fmtMoney(revenueBetween(startOfMonth(),todayStr()))}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row-between">
+      <h3 style="margin:0;">Sao lưu dữ liệu</h3>
+      <button class="link-btn" onclick="exportData()">Xuất file JSON ⤓</button>
+    </div>
+    <div class="small-muted" style="margin-top:6px;">Tải file để lưu dự phòng ngoài ứng dụng.</div>
+  </div>
+  `;
+}
+function goAttend(classId){ attSel.classId = classId; attSel.date = todayStr(); tab='attendance'; render(); }
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'so-lop-backup-'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  showToast('Đã tải file backup');
+}
+
+/* ================= CLASSES ================= */
+function classesHtml(){
+  if(state.classes.length===0) return `<div class="card"><div class="empty">Chưa có lớp học nào. Bấm "+ Thêm lớp học" bên dưới để bắt đầu.</div></div>`;
+  return `<div class="card">` + state.classes.map(c=>`
+    <div class="list-item" style="cursor:pointer;" onclick="openClassDetail('${c.id}')">
+      <div class="avatar">${initials(c.name)}</div>
+      <div class="li-main">
+        <div class="li-title">${c.name}</div>
+        <div class="li-sub">${WEEKDAYS_SHORT[c.weekday]} · ${c.start_time}–${c.end_time} · Khối ${c.grade} · ${fmtMoney(c.default_fee)}/buổi</div>
+      </div>
+      <div class="badge ok">${studentsInClass(c.id).length} HS</div>
+    </div>`).join('') + `</div>`;
+}
+
+function classDetailHtml(id){
+  const c = classById(id);
+  if(!c){ classDetailId=null; return classesHtml(); }
+  const roster = studentsInClass(id);
+  const notIn = state.students.filter(s=> !roster.find(r=>r.id===s.id));
+  return `
+  <button class="link-btn" onclick="classDetailId=null;render();">← Danh sách lớp</button>
+  <div class="card" style="margin-top:12px;">
+    <div class="row-between">
+      <h3 style="margin:0;">${c.name}</h3>
+      <button class="link-btn" onclick="openClassForm('${c.id}')">Sửa</button>
+    </div>
+    <div class="small-muted" style="margin-top:4px;">${WEEKDAYS_SHORT[c.weekday]} · ${c.start_time}–${c.end_time} · Khối ${c.grade} · ${fmtMoney(c.default_fee)}/buổi</div>
+    <button class="btn btn-coral btn-sm" style="margin-top:10px;" onclick="deleteClass('${c.id}')">Xoá lớp</button>
+  </div>
+  <div class="card">
+    <h3>Học sinh trong lớp (${roster.length})</h3>
+    ${roster.length===0 ? `<div class="empty">Chưa có học sinh.</div>` : roster.map(s=>`
+      <div class="list-item">
+        <div class="avatar">${initials(s.full_name)}</div>
+        <div class="li-main"><div class="li-title">${s.full_name}</div><div class="li-sub">Khối ${s.school_grade}</div></div>
+        <button class="link-btn" onclick="removeFromClass('${c.id}','${s.id}')">Bỏ khỏi lớp</button>
+      </div>`).join('')}
+    ${notIn.length>0 ? `
+      <div class="section-title">Thêm học sinh vào lớp</div>
+      <div class="field"><select id="add-to-class-select">
+        ${notIn.map(s=>`<option value="${s.id}">${s.full_name}</option>`).join('')}
+      </select></div>
+      <button class="btn btn-ghost btn-block" onclick="addToClass('${c.id}')">+ Thêm vào lớp</button>
+    ` : ''}
+  </div>`;
+}
+function openClassDetail(id){ classDetailId=id; render(); }
+function addToClass(classId){
+  const sel = document.getElementById('add-to-class-select');
+  if(!sel || !sel.value) return;
+  state.classStudents.push({id:uid(),class_id:classId,student_id:sel.value});
+  saveState(); render();
+}
+function removeFromClass(classId,studentId){
+  state.classStudents = state.classStudents.filter(cs=>!(cs.class_id===classId && cs.student_id===studentId));
+  saveState(); render();
+}
+function deleteClass(id){
+  if(!confirm('Xoá lớp này? Học sinh và lịch sử điểm danh liên quan vẫn được giữ lại cho học sinh.')) return;
+  state.classes = state.classes.filter(c=>c.id!==id);
+  state.classStudents = state.classStudents.filter(cs=>cs.class_id!==id);
+  classDetailId=null; saveState(); render();
+}
+
+function openClassForm(editId){
+  const c = editId ? classById(editId) : null;
+  const body = `
+    <div class="field"><label>Tên lớp</label><input id="f-name" value="${c?c.name:''}" placeholder="VD: Lớp 3A - Chiều T2/4/6"></div>
+    <div class="grid2">
+      <div class="field"><label>Khối lớp</label><select id="f-grade">${[1,2,3,4,5].map(g=>`<option value="${g}" ${c&&c.grade===g?'selected':''}>Lớp ${g}</option>`).join('')}</select></div>
+      <div class="field"><label>Thứ học</label><select id="f-weekday">${WEEKDAYS.map((w,i)=>`<option value="${i}" ${c&&c.weekday===i?'selected':''}>${w}</option>`).join('')}</select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Giờ bắt đầu</label><input type="time" id="f-start" value="${c?c.start_time:'18:00'}"></div>
+      <div class="field"><label>Giờ kết thúc</label><input type="time" id="f-end" value="${c?c.end_time:'19:30'}"></div>
+    </div>
+    <div class="field"><label>Học phí / buổi (đ)</label><input type="number" id="f-fee" value="${c?c.default_fee:40000}" step="1000"></div>
+    <button class="btn btn-primary btn-block" onclick="saveClass(${editId?`'${editId}'`:'null'})">${c?'Lưu thay đổi':'Tạo lớp học'}</button>
+  `;
+  openModal(c?'Sửa lớp học':'Thêm lớp học', body);
+}
+function saveClass(editId){
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){ showToast('Nhập tên lớp'); return; }
+  const data = {
+    name,
+    grade: parseInt(document.getElementById('f-grade').value),
+    weekday: parseInt(document.getElementById('f-weekday').value),
+    start_time: document.getElementById('f-start').value,
+    end_time: document.getElementById('f-end').value,
+    default_fee: parseInt(document.getElementById('f-fee').value)||0,
+  };
+  if(editId){ Object.assign(classById(editId), data); }
+  else{ state.classes.push({id:uid(), ...data}); }
+  closeModal(); saveState(); render();
+}
+
+/* ================= STUDENTS ================= */
+function studentsHtml(){
+  const list = state.students.filter(s=> s.full_name.toLowerCase().includes(studentFilter.toLowerCase()));
+  return `
+  <div class="field"><input placeholder="Tìm học sinh..." value="${studentFilter}" oninput="studentFilter=this.value;render();"></div>
+  <div class="card">
+    ${ list.length===0 ? `<div class="empty">Chưa có học sinh nào.</div>` :
+      list.map(s=>{
+        const d = studentDebt(s.id);
+        const over = d.sessions >= state.settings.debtThreshold;
+        return `<div class="list-item" style="cursor:pointer;" onclick="openStudent('${s.id}')">
+          <div class="avatar">${initials(s.full_name)}</div>
+          <div class="li-main">
+            <div class="li-title">${s.full_name}</div>
+            <div class="li-sub">Khối ${s.school_grade} · ${classesOfStudent(s.id).map(c=>c.name).join(', ')||'chưa vào lớp'}</div>
+          </div>
+          ${ d.sessions>0 ? `<div class="badge ${over?'debt':'warn'} num">${fmtMoney(d.amount)}</div>` : `<div class="badge ok">Đã đóng đủ</div>` }
+        </div>`;
+      }).join('')
+    }
+  </div>`;
+}
+
+function openStudent(id){ studentDetailId=id; render(); }
+
+function studentDetailHtml(id){
+  const s = studentById(id);
+  if(!s){ studentDetailId=null; return studentsHtml(); }
+  const d = studentDebt(id);
+  const history = state.attendance.filter(a=>a.student_id===id).sort((a,b)=> a.date<b.date?1:-1).slice(0,20);
+  const payHist = state.payments.filter(p=>p.student_id===id).sort((a,b)=> a.paid_date<b.paid_date?1:-1);
+  return `
+  <button class="link-btn" onclick="studentDetailId=null;render();">← Danh sách học sinh</button>
+  <div class="card" style="margin-top:12px;">
+    <div class="row-between">
+      <h3 style="margin:0;">${s.full_name}</h3>
+      <button class="link-btn" onclick="openStudentForm('${s.id}')">Sửa</button>
+    </div>
+    <div class="small-muted" style="margin-top:4px;">Khối ${s.school_grade} · ${s.parent_phone||'chưa có SĐT'} · ${s.status}</div>
+    <div class="small-muted">Lớp: ${classesOfStudent(id).map(c=>c.name).join(', ')||'chưa tham gia lớp nào'}</div>
+    <button class="btn btn-coral btn-sm" style="margin-top:10px;" onclick="deleteStudent('${s.id}')">Xoá học sinh</button>
+  </div>
+
+  <div class="card">
+    <div class="row-between">
+      <h3 style="margin:0;">Công nợ hiện tại</h3>
+      <div class="badge ${d.sessions>0?'debt':'ok'} num">${fmtMoney(d.amount)}</div>
+    </div>
+    <div class="small-muted" style="margin:6px 0 12px;">${d.sessions} buổi chưa đóng đủ tiền</div>
+    ${ d.sessions>0 ? `<button class="btn btn-primary btn-block" onclick="openPaymentForm('${s.id}')">Ghi nhận đóng tiền</button>` : '' }
+  </div>
+
+  <div class="card">
+    <h3>Lịch sử điểm danh</h3>
+    ${history.length===0?`<div class="empty">Chưa có buổi học nào.</div>`:history.map(a=>`
+      <div class="list-item">
+        <div class="li-main"><div class="li-title">${fmtDate(a.date)} · ${classById(a.class_id)?classById(a.class_id).name:'(lớp đã xoá)'}</div>
+        <div class="li-sub">${a.status==='present'?'Có mặt':'Vắng'}</div></div>
+        ${a.status==='present' ? `<div class="badge ${a.payment_status==='paid'?'ok':a.payment_status==='partial'?'warn':'debt'} num">${fmtMoney(a.fee_amount)}</div>` : ''}
+      </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <h3>Lịch sử thanh toán</h3>
+    ${payHist.length===0?`<div class="empty">Chưa có lần đóng tiền nào.</div>`:payHist.map(p=>`
+      <div class="list-item">
+        <div class="li-main"><div class="li-title num">${fmtMoney(p.amount)}</div><div class="li-sub">${fmtDate(p.paid_date)}${p.note?' · '+p.note:''}</div></div>
+        <button class="link-btn" onclick="deletePayment('${p.id}')">Xoá</button>
+      </div>`).join('')}
+  </div>`;
+}
+
+function openStudentForm(editId){
+  const s = editId ? studentById(editId) : null;
+  const body = `
+    <div class="field"><label>Họ và tên</label><input id="f-fullname" value="${s?s.full_name:''}" placeholder="Nguyễn Văn A"></div>
+    <div class="grid2">
+      <div class="field"><label>Khối lớp trường</label><select id="f-sgrade">${[1,2,3,4,5].map(g=>`<option value="${g}" ${s&&s.school_grade===g?'selected':''}>Lớp ${g}</option>`).join('')}</select></div>
+      <div class="field"><label>Trạng thái</label><select id="f-status">
+        ${['đang học','tạm nghỉ','nghỉ hẳn'].map(st=>`<option ${s&&s.status===st?'selected':''}>${st}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="field"><label>SĐT phụ huynh</label><input id="f-phone" value="${s?s.parent_phone||'':''}" placeholder="09xxxxxxxx"></div>
+    <div class="field"><label>Ngày bắt đầu học</label><input type="date" id="f-startdate" value="${s?s.start_date:todayStr()}"></div>
+    <div class="field"><label>Ghi chú</label><textarea id="f-note">${s?s.note||'':''}</textarea></div>
+    <button class="btn btn-primary btn-block" onclick="saveStudent(${editId?`'${editId}'`:'null'})">${s?'Lưu thay đổi':'Thêm học sinh'}</button>
+  `;
+  openModal(s?'Sửa học sinh':'Thêm học sinh', body);
+}
+function saveStudent(editId){
+  const full_name = document.getElementById('f-fullname').value.trim();
+  if(!full_name){ showToast('Nhập họ tên học sinh'); return; }
+  const data = {
+    full_name,
+    school_grade: parseInt(document.getElementById('f-sgrade').value),
+    status: document.getElementById('f-status').value,
+    parent_phone: document.getElementById('f-phone').value.trim(),
+    start_date: document.getElementById('f-startdate').value || todayStr(),
+    note: document.getElementById('f-note').value.trim(),
+  };
+  if(editId){ Object.assign(studentById(editId), data); }
+  else{ state.students.push({id:uid(), ...data}); }
+  closeModal(); saveState(); render();
+}
+function deleteStudent(id){
+  if(!confirm('Xoá học sinh này? Toàn bộ lịch sử điểm danh/thanh toán liên quan cũng sẽ bị xoá.')) return;
+  state.students = state.students.filter(s=>s.id!==id);
+  state.classStudents = state.classStudents.filter(cs=>cs.student_id!==id);
+  state.attendance = state.attendance.filter(a=>a.student_id!==id);
+  state.payments = state.payments.filter(p=>p.student_id!==id);
+  studentDetailId=null; saveState(); render();
+}
+
+/* ================= ATTENDANCE ================= */
+function attendanceHtml(){
+  if(state.classes.length===0) return `<div class="card"><div class="empty">Tạo lớp học trước ở tab "Lớp học" để bắt đầu điểm danh.</div></div>`;
+  if(!attSel.classId) attSel.classId = state.classes[0].id;
+  const cls = classById(attSel.classId);
+  const roster = studentsInClass(attSel.classId);
+  const session = state.sessions.find(se=>se.class_id===attSel.classId && se.date===attSel.date);
+  const existingAtt = session ? state.attendance.filter(a=>a.session_id===session.id) : [];
+
+  const rowsState = roster.map(s=>{
+    const ex = existingAtt.find(a=>a.student_id===s.id);
+    return {
+      student:s,
+      present: ex ? ex.status==='present' : true,
+      locked: !!(ex && ex.paid_amount>0),
+      fee: ex ? ex.fee_amount : cls.default_fee,
+      minFee: ex ? (ex.paid_amount||0) : 0,
+    };
+  });
+  window.__attRows = rowsState;
+
+  return `
+  <div class="chip-row">
+    ${state.classes.map(c=>`<div class="chip ${c.id===attSel.classId?'active':''}" onclick="setAttClass('${c.id}')">${c.name}</div>`).join('')}
+  </div>
+  <div class="field"><input type="date" value="${attSel.date}" onchange="setAttDate(this.value)"></div>
+  <div class="card">
+    <div class="row-between" style="margin-bottom:6px;">
+      <h3 style="margin:0;">Danh sách (${roster.length})</h3>
+      <button class="link-btn" onclick="toggleAll(true)">Tất cả có mặt</button>
+    </div>
+    ${roster.length===0 ? `<div class="empty">Lớp này chưa có học sinh. Vào tab "Lớp học" để thêm.</div>` : attRowsHtml()}
+  </div>
+  ${roster.length>0 ? `<button class="btn btn-primary btn-block" onclick="saveAttendance()">Lưu điểm danh</button>` : ''}
+  `;
+}
+function attRowsHtml(){
+  return window.__attRows.map((r,i)=>`
+    <div class="att-row">
+      <div class="avatar">${initials(r.student.full_name)}</div>
+      <div class="li-main"><div class="li-title">${r.student.full_name}</div>
+        ${r.locked?`<div class="li-sub">Đã đóng tiền buổi này — học phí/điểm danh bị khoá một phần</div>`:''}
+      </div>
+      ${ r.present ? `<input type="number" class="fee-input" step="1000" min="${r.minFee}" value="${r.fee}" ${r.locked && r.fee<=r.minFee?'disabled':''} onchange="updateAttFee(${i}, this.value)">` : '' }
+      <div class="toggle ${r.present?'present':'absent'}" onclick="toggleAtt(${i})"><div class="knob"></div></div>
+    </div>`).join('');
+}
+function updateAttFee(i, val){
+  const r = window.__attRows[i];
+  let fee = parseInt(val);
+  if(isNaN(fee) || fee<0) fee = 0;
+  if(fee < r.minFee) fee = r.minFee;
+  r.fee = fee;
+  render_att_rows_only();
+}
+function setAttClass(id){ attSel.classId=id; render(); }
+function setAttDate(v){ attSel.date=v; render(); }
+function toggleAtt(i){
+  const r = window.__attRows[i];
+  if(r.locked){ showToast('Buổi này đã có thanh toán, không thể chuyển thành vắng'); return; }
+  r.present = !r.present;
+  render_att_rows_only();
+}
+function toggleAll(val){
+  window.__attRows.forEach(r=>{ if(!r.locked) r.present=val; });
+  render_att_rows_only();
+}
+function render_att_rows_only(){
+  // cheap re-render of full view to keep code simple & state in sync
+  const root=document.getElementById('root');
+  root.innerHTML = topbarHtml() + '<main>' + attendanceHtmlPreserve() + '</main>' + fabHtml();
+  document.getElementById('tabbar-root').innerHTML = tabbarHtml();
+}
+function attendanceHtmlPreserve(){
+  const roster = window.__attRows.map(r=>r.student);
+  return `
+  <div class="chip-row">
+    ${state.classes.map(c=>`<div class="chip ${c.id===attSel.classId?'active':''}" onclick="setAttClass('${c.id}')">${c.name}</div>`).join('')}
+  </div>
+  <div class="field"><input type="date" value="${attSel.date}" onchange="setAttDate(this.value)"></div>
+  <div class="card">
+    <div class="row-between" style="margin-bottom:6px;">
+      <h3 style="margin:0;">Danh sách (${roster.length})</h3>
+      <button class="link-btn" onclick="toggleAll(true)">Tất cả có mặt</button>
+    </div>
+    ${attRowsHtml()}
+  </div>
+  <button class="btn btn-primary btn-block" onclick="saveAttendance()">Lưu điểm danh</button>
+  `;
+}
+
+function saveAttendance(){
+  let session = state.sessions.find(se=>se.class_id===attSel.classId && se.date===attSel.date);
+  if(!session){ session = {id:uid(), class_id:attSel.classId, date:attSel.date}; state.sessions.push(session); }
+
+  window.__attRows.forEach(r=>{
+    let att = state.attendance.find(a=>a.session_id===session.id && a.student_id===r.student.id);
+    if(r.present){
+      if(!att){
+        state.attendance.push({id:uid(), session_id:session.id, class_id:attSel.classId, student_id:r.student.id,
+          date:attSel.date, status:'present', fee_amount:r.fee, paid_amount:0, payment_status:'unpaid'});
+      } else {
+        att.status='present';
+        att.fee_amount = Math.max(r.fee, att.paid_amount||0); // học phí sửa tay, không được thấp hơn số đã đóng
+        att.payment_status = att.paid_amount>=att.fee_amount ? 'paid' : (att.paid_amount>0 ? 'partial' : 'unpaid');
+      }
+    } else {
+      if(att && att.status==='present' && !(att.paid_amount>0)){
+        state.attendance = state.attendance.filter(a=>a.id!==att.id);
+      } else if(att){
+        att.status='absent';
+      }
+    }
+  });
+  saveState();
+  showToast('Đã lưu điểm danh');
+  render();
+}
+
+/* ================= PAYMENTS ================= */
+function openPaymentForm(studentId){
+  const unpaid = unpaidAttendanceOf(studentId);
+  const body = `
+    <div class="section-title">Chọn buổi cần thanh toán (tuỳ chọn)</div>
+    ${unpaid.map(a=>`
+      <label class="check-row">
+        <input type="checkbox" class="pay-check" data-id="${a.id}" data-owe="${a.fee_amount-(a.paid_amount||0)}" onchange="recalcPayAmount()">
+        <span style="flex:1;">${fmtDate(a.date)} · ${classById(a.class_id)?classById(a.class_id).name:''}</span>
+        <span class="num">${fmtMoney(a.fee_amount-(a.paid_amount||0))}</span>
+      </label>`).join('')}
+    <div class="small-muted" style="margin:8px 0;">Không chọn buổi nào → hệ thống tự trừ theo buổi cũ nhất trước (FIFO).</div>
+    <div class="field" style="margin-top:10px;"><label>Số tiền đóng (đ)</label><input type="number" id="f-payamount" step="1000" value="0"></div>
+    <div class="field"><label>Ghi chú</label><input id="f-paynote" placeholder="VD: đóng tiền mặt"></div>
+    <button class="btn btn-primary btn-block" onclick="submitPayment('${studentId}')">Ghi nhận đóng tiền</button>
+  `;
+  openModal('Ghi nhận đóng tiền', body);
+}
+function recalcPayAmount(){
+  const checks = document.querySelectorAll('.pay-check:checked');
+  let sum=0; checks.forEach(c=> sum+=parseInt(c.dataset.owe));
+  document.getElementById('f-payamount').value = sum;
+}
+function submitPayment(studentId){
+  const amount = parseInt(document.getElementById('f-payamount').value)||0;
+  if(amount<=0){ showToast('Nhập số tiền hợp lệ'); return; }
+  const note = document.getElementById('f-paynote').value.trim();
+  const checked = Array.from(document.querySelectorAll('.pay-check:checked')).map(c=>c.dataset.id);
+
+  let targets;
+  if(checked.length>0){
+    targets = checked.map(id=> state.attendance.find(a=>a.id===id)).filter(Boolean);
+  } else {
+    targets = unpaidAttendanceOf(studentId);
+  }
+
+  let remaining = amount;
+  const allocations = [];
+  for(const att of targets){
+    if(remaining<=0) break;
+    const owed = att.fee_amount - (att.paid_amount||0);
+    if(owed<=0) continue;
+    const pay = Math.min(remaining, owed);
+    att.paid_amount = (att.paid_amount||0)+pay;
+    att.payment_status = att.paid_amount >= att.fee_amount ? 'paid' : 'partial';
+    allocations.push({attendance_id:att.id, amount:pay});
+    remaining -= pay;
+  }
+  state.payments.push({id:uid(), student_id:studentId, amount, paid_date:todayStr(), note, allocations});
+
+  closeModal(); saveState();
+  if(remaining>0){ showToast(`Đã ghi nhận. Dư ${fmtMoney(remaining)} chưa có buổi để trừ.`); }
+  else{ showToast('Đã ghi nhận thanh toán'); }
+  render();
+}
+function deletePayment(paymentId){
+  if(!confirm('Xoá lần thanh toán này? Các buổi liên quan sẽ trở lại trạng thái chưa đóng.')) return;
+  const p = state.payments.find(pp=>pp.id===paymentId);
+  if(p){
+    p.allocations.forEach(al=>{
+      const att = state.attendance.find(a=>a.id===al.attendance_id);
+      if(att){
+        att.paid_amount = Math.max(0,(att.paid_amount||0)-al.amount);
+        att.payment_status = att.paid_amount<=0 ? 'unpaid' : (att.paid_amount>=att.fee_amount?'paid':'partial');
+      }
+    });
+  }
+  state.payments = state.payments.filter(pp=>pp.id!==paymentId);
+  saveState(); render();
+}
+
+/* ================= SETTINGS ================= */
+function openSettings(){
+  const body = `
+    <div class="field"><label>Cảnh báo nợ từ (số buổi)</label><input type="number" id="f-threshold" value="${state.settings.debtThreshold}" min="1"></div>
+    <button class="btn btn-primary btn-block" onclick="saveSettings()">Lưu</button>
+    <div class="section-title">Dữ liệu</div>
+    <button class="btn btn-ghost btn-block" onclick="exportData()">Xuất file backup (JSON)</button>
+  `;
+  openModal('Cài đặt', body);
+}
+function saveSettings(){
+  state.settings.debtThreshold = parseInt(document.getElementById('f-threshold').value)||3;
+  closeModal(); saveState(); render();
+}
+
+/* ================= MODAL ================= */
+function openModal(title, bodyHtml){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this)closeModal()">
+      <div class="sheet">
+        <div class="sheet-head"><h3>${title}</h3><button class="close-x" onclick="closeModal()">✕</button></div>
+        ${bodyHtml}
+      </div>
+    </div>`;
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+function bindGlobalEvents(){}
+
+loadState();
+</script>
+</body>
+</html>
